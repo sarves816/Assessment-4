@@ -39,13 +39,12 @@ def run_test_suite():
     w_sus = DigitalWallet("ACC_SUS", 1234)
     w_sus.deposit(20000)
     # Frequency: 5 rapid successful deposits, the 6th must trigger rate alert
+    res_large = w_sus.deposit(50000)
+    assert "Large transaction limit exceeded" in res_large, "High value trigger failed"
     for _ in range(5):
         w_sus.deposit(10)
     res = w_sus.deposit(10)
     assert "More than 5 transactions in 10 minutes" in res, "Frequency trap failed"
-    
-    res_large = w_sus.deposit(50000)
-    assert "Large transaction limit exceeded" in res_large, "High value trigger failed"
     print("Test Suspicious transaction: PASSED")
 
     # 6. Test: Duplicate transaction
