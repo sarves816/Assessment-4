@@ -1,6 +1,6 @@
 import time
 import threading
-from DigitalWallet import DigitalWallet
+from digitalwallet import DigitalWallet
 
 def run_test_suite():
     print("--- STARTING QA SECURITY TEST SUITE ---\n")
