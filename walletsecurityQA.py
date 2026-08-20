@@ -14,7 +14,7 @@ def run_test_suite():
     print("Test Normal transaction: PASSED")
 
     # 2. Test: Insufficient balance
-    res = w1.withdraw(5000, 1234)
+    res = w1.withdraw(1000, 1234)
     assert "Insufficient balance" in res, "Failed to trap insufficient funds"
     print("Test Insufficient balance: PASSED")
 
