@@ -3,11 +3,13 @@ from ICUAllocation import ICUAllocation
 
 def run_test_suite():
 
-    print("=== STARTING ICU ALLOCATION QA TEST SUITE ===\n")
+    print("======================================")
+    print(" ICU ALLOCATION QA TEST SUITE")
+    print("======================================")
 
-    # --------------------------------
-    # Test 1: Critical patient
-    # --------------------------------
+    # ----------------------------------
+    # 1. Critical Patient
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
@@ -18,23 +20,20 @@ def run_test_suite():
         140,
         80,
         40,
-        "Heart disease"
+        "Heart Disease"
     )
 
     patient = system.get_patient("P001")
 
-    assert patient["priority"] == "CRITICAL", \
-        "Critical patient classification failed"
-
-    assert patient["bed"] == True, \
-        "Critical patient did not receive bed"
+    assert patient["priority"] == "CRITICAL"
+    assert patient["bed_allocated"] is True
 
     print("Test Critical patient: PASSED")
 
 
-    # --------------------------------
-    # Test 2: Normal patient
-    # --------------------------------
+    # ----------------------------------
+    # 2. Normal Patient
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
@@ -50,31 +49,30 @@ def run_test_suite():
 
     patient = system.get_patient("P002")
 
-    assert patient["priority"] == "LOW", \
-        "Normal patient classification failed"
-
-    assert patient["bed"] == True, \
-        "Normal patient did not receive bed"
+    assert patient["priority"] == "LOW"
+    assert patient["bed_allocated"] is True
 
     print("Test Normal patient: PASSED")
 
 
-    # --------------------------------
-    # Test 3: Emergency case
-    # --------------------------------
+    # ----------------------------------
+    # 3. Emergency Case
+    # ----------------------------------
 
     system = ICUAllocation(1)
 
+    # First patient occupies the only bed
     system.add_patient(
         "P003",
         30,
-        95,
+        98,
         80,
         120,
         37,
         "None"
     )
 
+    # Emergency patient arrives
     result = system.add_patient(
         "P004",
         40,
@@ -86,24 +84,22 @@ def run_test_suite():
         emergency=True
     )
 
-    waiting = system.get_waiting_list()
-
-    assert waiting[0] == "P004", \
-        "Emergency patient was not given priority"
+    assert "EMERGENCY" in result
+    assert system.get_waiting_list()[0] == "P004"
 
     print("Test Emergency case: PASSED")
 
 
-    # --------------------------------
-    # Test 4: No ICU beds
-    # --------------------------------
+    # ----------------------------------
+    # 4. No ICU Beds
+    # ----------------------------------
 
     system = ICUAllocation(1)
 
     system.add_patient(
         "P005",
-        50,
-        95,
+        40,
+        98,
         80,
         120,
         37,
@@ -112,26 +108,23 @@ def run_test_suite():
 
     result = system.add_patient(
         "P006",
-        40,
+        50,
         95,
-        80,
-        120,
+        90,
+        110,
         37,
         "None"
     )
 
-    assert "waiting list" in result.lower(), \
-        "Patient was not placed on waiting list"
-
-    assert "P006" in system.get_waiting_list(), \
-        "Patient missing from waiting list"
+    assert "waiting list" in result.lower()
+    assert "P006" in system.get_waiting_list()
 
     print("Test No ICU beds: PASSED")
 
 
-    # --------------------------------
-    # Test 5: Duplicate patient
-    # --------------------------------
+    # ----------------------------------
+    # 5. Duplicate Patient
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
@@ -155,15 +148,14 @@ def run_test_suite():
         "None"
     )
 
-    assert "Duplicate" in result, \
-        "Duplicate patient ID was not rejected"
+    assert "Duplicate" in result
 
     print("Test Duplicate patient: PASSED")
 
 
-    # --------------------------------
-    # Test 6: Invalid oxygen level
-    # --------------------------------
+    # ----------------------------------
+    # 6. Invalid Oxygen Level
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
@@ -177,73 +169,72 @@ def run_test_suite():
         "None"
     )
 
-    assert "Invalid oxygen" in result, \
-        "Invalid oxygen level was not detected"
+    assert "Invalid oxygen level" in result
 
     print("Test Invalid oxygen level: PASSED")
 
 
-    # --------------------------------
-    # Test 7: Invalid heart rate
-    # --------------------------------
+    # ----------------------------------
+    # 7. Invalid Heart Rate
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
     result = system.add_patient(
         "P009",
         30,
-        95,
+        98,
         0,
         120,
         37,
         "None"
     )
 
-    assert "Invalid heart rate" in result, \
-        "Invalid heart rate was not detected"
+    assert "Invalid heart rate" in result
 
     print("Test Invalid heart rate: PASSED")
 
 
-    # --------------------------------
-    # Test 8: Priority boundary values
-    # --------------------------------
+    # ----------------------------------
+    # 8. Priority Boundary Values
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
     score = system.calculate_priority(
         30,
-        94,
-        60,
-        100,
+        98,
+        75,
+        120,
         37,
         "None"
     )
 
     priority = system.classify_patient(score)
 
-    assert priority in ["LOW", "MEDIUM", "HIGH", "CRITICAL"], \
-        "Invalid priority classification"
+    assert priority == "LOW"
 
     print("Test Priority boundary values: PASSED")
 
 
-    # --------------------------------
-    # Test 9: Multiple patients competing
-    # --------------------------------
+    # ----------------------------------
+    # 9. Multiple Patients Competing
+    # ----------------------------------
 
     system = ICUAllocation(2)
 
+    # Patient 1
     system.add_patient(
         "P010",
         30,
-        95,
+        98,
         80,
         120,
         37,
         "None"
     )
 
+    # Patient 2
     system.add_patient(
         "P011",
         70,
@@ -251,9 +242,10 @@ def run_test_suite():
         140,
         80,
         40,
-        "Heart disease"
+        "Heart Disease"
     )
 
+    # Patient 3 - no bed
     system.add_patient(
         "P012",
         60,
@@ -264,22 +256,26 @@ def run_test_suite():
         "Diabetes"
     )
 
-    # P012 should be waiting because only 2 beds exist
-    assert "P012" in system.get_waiting_list(), \
-        "Third patient was not placed on waiting list"
+    assert "P012" in system.get_waiting_list()
 
-    # Free one bed
+    # Make one bed available
     system.available_beds = 1
 
     allocated = system.allocate_waiting_patients()
 
-    assert "P012" in allocated, \
-        "Waiting patient was not allocated"
+    assert "P012" in allocated
 
     print("Test Multiple patients competing for same bed: PASSED")
 
 
-    print("\n=== ALL QA TESTS PASSED ===")
+    # ----------------------------------
+    # Final Result
+    # ----------------------------------
+
+    print()
+    print("======================================")
+    print(" ALL QA TESTS PASSED")
+    print("======================================")
 
 
 if __name__ == "__main__":
